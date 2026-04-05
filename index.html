@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axiometric — VA Performance System</title>
+  <meta name="description" content="The professional VA session management and competency tracking system. Built for serious teams." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0c0e12;
+      --surface:  #121519;
+      --raised:   #191d24;
+      --border:   #1e232c;
+      --border2:  #262c38;
+      --accent:   #4dd9ac;
+      --accent-dim: rgba(77,217,172,0.08);
+      --accent-mid: rgba(77,217,172,0.15);
+      --blue:     #5b8af0;
+      --green:    #22d48a;
+      --amber:    #f0a04b;
+      --text:     #e2e8f0;
+      --text2:    #8892a4;
+      --muted:    #4a5568;
+      --mono:     'IBM Plex Mono', monospace;
+      --sans:     'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    canvas#bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Grid overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(30,35,44,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,35,44,0.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #root { position: relative; z-index: 1; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(12,14,18,0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-color: var(--border);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .nav-logo svg { flex-shrink: 0; }
+    .nav-brand {
+      display: flex;
+      flex-direction: column;
+    }
+    .nav-brand-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .nav-brand-sub {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .nav-right { display: flex; align-items: center; gap: 24px; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--text2);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s;
+      border: none;
+    }
+    .btn-primary {
+      background: rgba(77,217,172,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(77,217,172,0.3);
+    }
+    .btn-primary:hover {
+      background: rgba(77,217,172,0.2);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(77,217,172,0.2);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border2);
+    }
+    .btn-secondary:hover {
+      color: var(--text);
+      border-color: var(--muted);
+      transform: translateY(-1px);
+    }
+    .btn-lg { padding: 14px 32px; font-size: 13px; }
+    .btn-download {
+      position: relative;
+      background: var(--accent);
+      color: #0c0e12;
+      border: none;
+      font-weight: 600;
+      overflow: visible;
+    }
+    .btn-download:hover {
+      background: #6fffc8;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(77,217,172,0.4);
+    }
+    .btn-download::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 8px;
+      border: 1px solid rgba(77,217,172,0.4);
+      animation: ringPulse 2.5s ease-in-out infinite;
+    }
+    .btn-download::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 12px;
+      border: 1px solid rgba(77,217,172,0.15);
+      animation: ringPulse 2.5s ease-in-out infinite 0.4s;
+    }
+    @keyframes ringPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0; transform: scale(1.08); }
+    }
+
+    /* ── LAYOUT ── */
+    section { position: relative; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 0 80px;
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.1s;
+    }
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+    }
+    .hero h1 {
+      font-family: var(--sans);
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.25s;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-desc {
+      font-size: 16px;
+      color: var(--text2);
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 480px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.4s;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.55s;
+    }
+    .hero-version {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.7s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-version::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* Hero visual — app window mockup */
+    .hero-visual {
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.3s;
+    }
+    .app-window {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(77,217,172,0.05);
+    }
+    .app-titlebar {
+      height: 40px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+    }
+    .titlebar-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .app-titlebar-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-left: 8px;
+    }
+    .app-body { display: flex; height: 340px; }
+    .app-sidebar {
+      width: 140px;
+      flex-shrink: 0;
+      background: rgba(12,14,18,0.5);
+      border-right: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    .sidebar-group { margin-bottom: 16px; }
+    .sidebar-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 0 16px 6px;
+      opacity: 0.6;
+    }
+    .sidebar-item {
+      display: block;
+      padding: 7px 16px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(77,217,172,0.05);
+    }
+    .app-content {
+      flex: 1;
+      padding: 20px;
+      overflow: hidden;
+    }
+    .app-content-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .mock-card {
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .mock-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .mock-text {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text2);
+    }
+    .mock-badge {
+      font-family: var(--mono);
+      font-size: 8px;
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+    .mock-badge-green { color: var(--green); background: rgba(34,212,138,0.1); }
+    .mock-badge-amber { color: var(--amber); background: rgba(240,160,75,0.1); }
+    .mock-badge-grey  { color: var(--muted); background: rgba(74,85,104,0.1); }
+    .mock-bar { height: 2px; background: var(--border2); border-radius: 1px; overflow: hidden; margin-top: 8px; }
+    .mock-bar-fill { height: 100%; background: var(--accent); border-radius: 1px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION SHARED ── */
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 15px;
+      color: var(--text2);
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── FEATURES ── */
+    .features { padding: 120px 0; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 28px 24px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      border-color: rgba(77,217,172,0.3);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(77,217,172,0.05);
+      transform: translateY(-3px);
+    }
+    .feature-icon {
+      width: 40px; height: 40px;
+      background: rgba(77,217,172,0.08);
+      border: 1px solid rgba(77,217,172,0.15);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    .feature-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how { padding: 80px 0 120px; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: calc(16.66% + 28px);
+      right: calc(16.66% + 28px);
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      opacity: 0.3;
+    }
+    .step { text-align: center; padding: 0 24px; }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      position: relative;
+      z-index: 1;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    /* ── STATS ── */
+    .stats { padding: 60px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      text-align: center;
+    }
+    .stat {
+      padding: 24px 16px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat:nth-child(4n) { border-right: none; }
+    .stat:nth-last-child(-n+4) { border-bottom: none; }
+    .stat-num {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ── DOWNLOAD CTA ── */
+    .download-section {
+      padding: 120px 0;
+      text-align: center;
+    }
+    .download-box {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 56px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .download-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(77,217,172,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .download-box-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .download-box h2 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .download-box p {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+    .download-meta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .download-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding: 4px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+    .download-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-name {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .footer-right {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* ── SEPARATOR ── */
+    .sep {
+      display: block;
+      width: 40px;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.4;
+      margin: 0 auto 16px;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-visual { order: -1; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .steps { grid-template-columns: 1fr; gap: 40px; }
+      .steps::before { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .stat:nth-child(2) { border-right: none; }
+      .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--border); }
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-right { text-align: center; }
+      .container { padding: 0 20px; }
+      .download-box { padding: 36px 24px; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="root">
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo">
+      <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="14" fill="#0c0e12"/>
+        <path d="M50 5L89.5 27.5V72.5L50 95L10.5 72.5V27.5L50 5Z" stroke="#4dd9ac" stroke-width="1" stroke-opacity="0.3" stroke-dasharray="4 2"/>
+        <path d="M50 15L80.5 32.5V67.5L50 85L19.5 67.5V32.5L50 15Z" stroke="#4dd9ac" stroke-width="1.5" stroke-opacity="0.6"/>
+        <path d="M50 25L72 75H60L50 52L40 75H28L50 25Z" fill="#4dd9ac" fill-opacity="0.1"/>
+        <path d="M50 25L72 75M50 25L28 75M38 65H62" stroke="#4dd9ac" stroke-width="3.5" stroke-linecap="square" stroke-linejoin="miter"/>
+        <path d="M50 0V10M50 90V100M0 50H10M90 50H100" stroke="#4dd9ac" stroke-width="1" stroke-opacity="0.4"/>
+        <path d="M15 30L20 27M85 30L80 27M15 70L20 73M85 70L80 73" stroke="#4dd9ac" stroke-width="1.5" stroke-opacity="0.8"/>
+        <circle cx="50" cy="52" r="2.5" fill="#4dd9ac"/>
+        <circle cx="50" cy="52" r="6" stroke="#4dd9ac" stroke-width="0.5" stroke-opacity="0.5"/>
+      </svg>
+      <div class="nav-brand">
+        <span class="nav-brand-name">Axiometric</span>
+        <span class="nav-brand-sub">VA Session Manager</span>
+      </div>
+    </a>
+    <div class="nav-right">
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#download">Download</a></li>
+      </ul>
+      <a href="#download" class="btn btn-primary">Download</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="hero-tag">Axiometric Framework</div>
+          <h1>The VA Performance System Built for <span>Serious Teams</span></h1>
+          <p class="hero-desc">
+            A professional desktop app for managing VA work sessions, tracking competency development, and running rigorous performance reviews — all synced securely to the cloud.
+          </p>
+          <div class="hero-actions">
+            <a href="#download" class="btn btn-download btn-lg">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download for Windows
+            </a>
+            <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+          </div>
+          <div class="hero-version">v2.5.0 — Windows x64 — Free</div>
+        </div>
+        <div class="hero-visual">
+          <div class="app-window">
+            <div class="app-titlebar">
+              <div class="titlebar-dot" style="background:#e05c6a"></div>
+              <div class="titlebar-dot" style="background:#f0a04b"></div>
+              <div class="titlebar-dot" style="background:#22d48a"></div>
+              <span class="app-titlebar-title">AXIOMETRIC — VA Session Manager</span>
+            </div>
+            <div class="app-body">
+              <div class="app-sidebar">
+                <div class="sidebar-group">
+                  <div class="sidebar-label">Session</div>
+                  <span class="sidebar-item active">Dashboard</span>
+                  <span class="sidebar-item">Session Start</span>
+                  <span class="sidebar-item">Session Close</span>
+                </div>
+                <div class="sidebar-group">
+                  <div class="sidebar-label">Tracking</div>
+                  <span class="sidebar-item">Competencies</span>
+                  <span class="sidebar-item">Hours & Pay</span>
+                  <span class="sidebar-item">Boss's Queue</span>
+                </div>
+                <div class="sidebar-group">
+                  <div class="sidebar-label">Records</div>
+                  <span class="sidebar-item">Documents</span>
+                  <span class="sidebar-item">Masterplan</span>
+                </div>
+              </div>
+              <div class="app-content">
+                <div class="app-content-title">Competency Tracker</div>
+                <div class="mock-card">
+                  <div class="mock-row">
+                    <span class="mock-text">Direct Communication</span>
+                    <span class="mock-badge mock-badge-green">[Approved]</span>
+                  </div>
+                  <div class="mock-bar"><div class="mock-bar-fill" style="width:100%"></div></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-row">
+                    <span class="mock-text">Task Prioritisation</span>
+                    <span class="mock-badge mock-badge-amber">[In Review]</span>
+                  </div>
+                  <div class="mock-bar"><div class="mock-bar-fill" style="width:65%"></div></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-row">
+                    <span class="mock-text">Proactive Reporting</span>
+                    <span class="mock-badge mock-badge-grey">[Not Started]</span>
+                  </div>
+                  <div class="mock-bar"><div class="mock-bar-fill" style="width:0%"></div></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-row">
+                    <span class="mock-text">Semantic Clarity</span>
+                    <span class="mock-badge mock-badge-green">[Approved]</span>
+                  </div>
+                  <div class="mock-bar"><div class="mock-bar-fill" style="width:100%"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats reveal">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-num">10</div>
+          <div class="stat-label">App Modules</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">10</div>
+          <div class="stat-label">Currencies Supported</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">3</div>
+          <div class="stat-label">AI Providers</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Private Cloud Data</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Custom Competencies</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Custom Phases</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">Live</div>
+          <div class="stat-label">Real-time Sync</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">Free</div>
+          <div class="stat-label">To Download</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">What's inside</div>
+        <h2 class="section-title">Everything you need to run a professional VA operation</h2>
+        <span class="sep"></span>
+        <p class="section-sub">Six fully integrated modules, one secure cloud-synced desktop app.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="feature-title">AI Assistant</div>
+          <p class="feature-desc">Ask questions, update data, and get intelligent insights using your own API key. Supports Google Gemini, Anthropic Claude, and Alibaba DashScope.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="feature-title">Competency Tracker</div>
+          <p class="feature-desc">Build, score, and track competency documents across multiple domains. Full BARS rubric support with L1–L4 behavioural anchors per competency.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="feature-title">Boss's Queue</div>
+          <p class="feature-desc">A structured review pipeline for submitting competency documents for approval. Track status, priority, and feedback notes end-to-end.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="feature-title">Hours & Pay Tracker</div>
+          <p class="feature-desc">Log work sessions with start/end times, calculate earnings automatically, and export monthly reports. Supports 10 currencies including USD, GBP, KWD, and more.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div class="feature-title">Document Store</div>
+          <p class="feature-desc">Version-controlled storage for all competency documents and scoring templates. Track status, link URLs, and maintain a full audit trail.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+          <div class="feature-title">Masterplan</div>
+          <p class="feature-desc">Define and track your own custom project phases. Add phase names, key outputs, and advance status as work progresses — fully flexible for any team structure.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">Getting started</div>
+        <h2 class="section-title">Up and running in minutes</h2>
+        <span class="sep"></span>
+      </div>
+      <div class="steps">
+        <div class="step reveal reveal-delay-1">
+          <div class="step-num">01</div>
+          <div class="step-title">Download & Install</div>
+          <p class="step-desc">Run the Windows installer. No configuration required — the app sets itself up and launches immediately.</p>
+        </div>
+        <div class="step reveal reveal-delay-2">
+          <div class="step-num">02</div>
+          <div class="step-title">Create Your Account</div>
+          <p class="step-desc">Sign up with your email address. Verify your inbox, log in, and your private cloud workspace is ready instantly.</p>
+        </div>
+        <div class="step reveal reveal-delay-3">
+          <div class="step-num">03</div>
+          <div class="step-title">Start Tracking</div>
+          <p class="step-desc">Log sessions, build competencies, run your review pipeline. All data syncs securely to your private Firestore database.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="download-section" id="download">
+    <div class="container">
+      <div class="download-box reveal">
+        <div class="download-box-tag">Ready to download</div>
+        <h2>Get Axiometric</h2>
+        <p>The complete VA performance management system — free to download, private to you.</p>
+        <a href="#" class="btn btn-download btn-lg" id="download-btn"
+           onclick="alert('Upload the installer to a GitHub Release and paste the download URL into this href.')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Axiometric
+        </a>
+        <div class="download-meta">
+          <span class="download-badge">Windows x64</span>
+          <span class="download-badge">v2.5.0</span>
+          <span class="download-badge">Free</span>
+        </div>
+        <p class="download-note">Requires a verified email account. Your data is stored privately in your own secure cloud database and is never shared.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">
+      <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="14" fill="#0c0e12"/>
+        <path d="M50 15L80.5 32.5V67.5L50 85L19.5 67.5V32.5L50 15Z" stroke="#4dd9ac" stroke-width="1.5" stroke-opacity="0.4"/>
+        <path d="M50 25L72 75M50 25L28 75M38 65H62" stroke="#4dd9ac" stroke-width="3.5" stroke-linecap="square"/>
+        <circle cx="50" cy="52" r="2.5" fill="#4dd9ac"/>
+      </svg>
+      <span class="footer-name">Axiometric</span>
+    </div>
+    <div class="footer-right">
+      <div>v2.5.0 — Windows x64</div>
+      <div style="margin-top:4px">© 2026 Axiometric. All rights reserved.</div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // ── PARTICLE BACKGROUND ──
+  (function() {
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    const COLORS = [[77,217,172],[91,138,240],[34,212,138],[77,217,172],[77,217,172]];
+    const COUNT = 80, MAX_DIST = 150, SPEED = 0.25;
+    let particles = [], raf;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd = (Math.random() * 0.6 + 0.2) * SPEED;
+      const base = Math.random() * 0.4 + 0.08;
+      particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        r: Math.random() * 1.4 + 0.4,
+        base, op: base, dir: Math.random() > 0.5 ? 1 : -1,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)]
+      });
+    }
+
+    function draw() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        p.op += p.dir * 0.003;
+        if (p.op > p.base + 0.12 || p.op < p.base - 0.06) p.dir *= -1;
+        p.op = Math.max(0.04, Math.min(0.6, p.op));
+      }
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < MAX_DIST) {
+            const t = 1 - dist / MAX_DIST;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(${a.color[0]},${a.color[1]},${a.color[2]},${(t*t*0.15).toFixed(3)})`;
+            ctx.lineWidth = t * 0.7;
+            ctx.stroke();
+          }
+        }
+      }
+      for (const p of particles) {
+        const [r,g,b] = p.color;
+        const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+        grd.addColorStop(0, `rgba(${r},${g},${b},${(p.op*0.35).toFixed(3)})`);
+        grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
+        ctx.fillStyle = grd; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${p.op.toFixed(3)})`; ctx.fill();
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  // ── NAV SCROLL ──
+  (function() {
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 20);
+    });
+  })();
+
+  // ── SCROLL REVEAL ──
+  (function() {
+    const els = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    els.forEach(el => obs.observe(el));
+  })();
+</script>
+</body>
+</html>
