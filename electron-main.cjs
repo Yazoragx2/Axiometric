@@ -110,8 +110,8 @@ app.whenReady().then(() => {
     const { model, systemPrompt, messages } = payload;
     // 3. Resolve Model (Fail-safe for old IDs)
     let resolvedModel = model || 'qwen/qwen-plus';
-    if (resolvedModel === 'anthropic/claude-3.5-sonnet') {
-      resolvedModel = 'anthropic/claude-3.5-sonnet:beta';
+    if (resolvedModel.includes('claude-3.5-sonnet')) {
+      resolvedModel = 'anthropic/claude-3-5-sonnet-20240620';
     }
 
     // 4. Decrypt Key
