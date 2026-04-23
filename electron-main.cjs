@@ -136,7 +136,7 @@ app.whenReady().then(() => {
 
       if (!res.ok) {
         const errText = await res.text();
-        throw new Error(`OpenRouter API emitted a ${res.status}: ${errText}`);
+        throw new Error(`[V3.0.5 FIX] OpenRouter API emitted a ${res.status}: ${errText}`);
       }
 
       const data = await res.json();
