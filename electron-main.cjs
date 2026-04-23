@@ -108,9 +108,13 @@ app.whenReady().then(() => {
 
     // 2. Extract payload
     const { model, systemPrompt, messages } = payload;
-    const resolvedModel = model || 'qwen/qwen-plus';
+    // 3. Resolve Model (Fail-safe for old IDs)
+    let resolvedModel = model || 'qwen/qwen-plus';
+    if (resolvedModel === 'anthropic/claude-3.5-sonnet') {
+      resolvedModel = 'anthropic/claude-3.5-sonnet:beta';
+    }
 
-    // 3. Decrypt Key
+    // 4. Decrypt Key
     const apiKey = getEncryptedKey();
 
     // 4. API Request
