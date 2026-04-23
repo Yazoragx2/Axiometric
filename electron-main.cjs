@@ -168,7 +168,16 @@ app.whenReady().then(() => {
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
     mainWindow?.webContents.send('update-available', info);
+  });
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for updates...');
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('Update not available:', info.version);
   });
 
   autoUpdater.on('download-progress', (progressObj) => {
@@ -180,6 +189,7 @@ app.whenReady().then(() => {
   });
 
   autoUpdater.on('error', (err) => {
+    console.error('Update error:', err.message);
     mainWindow?.webContents.send('update-error', err.message);
   });
 
