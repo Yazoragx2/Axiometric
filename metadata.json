@@ -1,0 +1,5 @@
+{
+  "name": "VA Session Manager",
+  "description": "A specialized workflow engine for the Axiometric Framework project, managing competency builds, session logs, and psychometric validation phases.",
+  "requestFramePermissions": []
+}

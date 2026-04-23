@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check if the user is the Absolute Owner
+    function isOwner() {
+      return request.auth != null && request.auth.token.email == 'felixvenue99@gmail.com';
+    }
+
+    // Helper to get target user's profile
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    // Helper to check if current user is an Admin in their team
+    function isAdmin() {
+      let profile = getUserData(request.auth.uid);
+      return profile != null && (profile.role == 'admin' || isOwner());
+    }
+
+    // Helper to get current user's teamId
+    function getMyTeamId() {
+      return getUserData(request.auth.uid).teamId;
+    }
+
+    // --- Users Collection ---
+    match /users/{uid} {
+      // Allow read so teammates and admins can see profiles
+      allow read: if request.auth != null;
+      
+      // Creating a new profile: Must limit the role to member, no team assigned
+      allow create: if request.auth != null && request.auth.uid == uid 
+        && (!('role' in request.resource.data) || request.resource.data.role == 'member')
+        && !('teamId' in request.resource.data);
+
+      // Updates: 
+      // Owners can do anything.
+      // Admins can update users to invite them to their team (if teamId matches the admin's teamId).
+      // Standard members can update their own profile, but CANNOT change their role or teamId.
+      allow update: if isOwner() 
+        || (request.auth != null && isAdmin() 
+            && (
+              (resource.data.get('teamId', '') == '' && request.resource.data.get('teamId', '') == getMyTeamId())
+              || (resource.data.get('teamId', '') == getMyTeamId())
+            )
+            && request.resource.data.get('role', 'member') != 'owner' 
+            && resource.data.get('role', 'member') != 'owner')
+        || (request.auth != null && request.auth.uid == uid 
+            && request.resource.data.get('role', resource.data.role) == resource.data.role 
+            && request.resource.data.get('teamId', resource.data.teamId) == resource.data.teamId);
+      
+      allow write: if isOwner();
+      
+      // Subcollections (Private user data like Hours, Settings)
+      match /{allSubcollections=**} {
+        allow read: if request.auth != null && (request.auth.uid == uid || isAdmin() || isOwner());
+        allow write: if request.auth != null && (request.auth.uid == uid || isAdmin() || isOwner());
+      }
+    }
+
+    // --- Teams Collection ---
+    match /teams/{teamId} {
+      // Allow read if user is a member of the team
+      allow read: if request.auth != null && (isOwner() || getUserData(request.auth.uid).teamId == teamId);
+      
+      // Only Owner can create/delete teams. Admins can update members, but only in their own team.
+      allow create, delete: if isOwner();
+      allow update: if isOwner() || (isAdmin() && getMyTeamId() == teamId);
+
+      // Subcollections (Shared team data like Documents, Masterplan)
+      match /{allSubcollections=**} {
+        allow read: if request.auth != null && (isOwner() || getUserData(request.auth.uid).teamId == teamId);
+        allow write: if request.auth != null && (isOwner() || (isAdmin() && getMyTeamId() == teamId) || getUserData(request.auth.uid).teamId == teamId);
+      }
+    }
+  }
+}

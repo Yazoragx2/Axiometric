@@ -1,0 +1,222 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "acceptedTOS": { "type": "boolean" },
+        "acceptedCPC": { "type": "boolean" },
+        "tosAcceptedAt": { "type": "string", "format": "date-time" },
+        "cpcAcceptedAt": { "type": "string", "format": "date-time" },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["email", "acceptedTOS", "acceptedCPC"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "Project document",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "version": { "type": "string" },
+        "url": { "type": "string" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" },
+        "dateAdded": { "type": "string" }
+      },
+      "required": ["name", "category"]
+    },
+    "QueueItem": {
+      "title": "QueueItem",
+      "description": "Boss’s Queue review queue item",
+      "type": "object",
+      "properties": {
+        "docName": { "type": "string" },
+        "action": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "dateSubmitted": { "type": "string" },
+        "notes": { "type": "string" },
+        "feedbackNotes": { "type": "string" }
+      },
+      "required": ["docName"]
+    },
+    "HourEntry": {
+      "title": "HourEntry",
+      "description": "Work session log",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "label": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["date", "label", "startTime", "endTime"]
+    },
+    "CompetencyStatus": {
+      "title": "CompetencyStatus",
+      "description": "Status of a competency",
+      "type": "object",
+      "properties": {
+        "compId": { "type": "integer" },
+        "compDoc": { "type": "string" },
+        "scoringTemplate": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["compId"]
+    },
+    "CustomCompetency": {
+      "title": "CustomCompetency",
+      "description": "Custom competency entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "name": { "type": "string" },
+        "domain": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "MasterplanPhase": {
+      "title": "MasterplanPhase",
+      "description": "Project phase status",
+      "type": "object",
+      "properties": {
+        "phaseId": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["phaseId", "status"]
+    },
+    "MasterplanProgress": {
+      "title": "MasterplanProgress",
+      "description": "Map of all phase statuses",
+      "type": "object",
+      "properties": {
+        "phase3": { "type": "string" },
+        "phase4": { "type": "string" },
+        "phase5": { "type": "string" }
+      }
+    },
+    "WorkItem": {
+      "title": "WorkItem",
+      "description": "Daily work task log",
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "documents": { "type": "string" },
+        "timeSpent": { "type": "string" },
+        "category": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["description", "date"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "User specific settings",
+      "type": "object",
+      "properties": {
+        "apiKey": { "type": "string" },
+        "hourlyRate": { "type": "string" }
+      }
+    },
+    "TimerState": {
+      "title": "TimerState",
+      "description": "Current timer state",
+      "type": "object",
+      "properties": {
+        "running": { "type": "boolean" },
+        "startTimestamp": { "type": "number" },
+        "label": { "type": "string" },
+        "elapsedAtStop": { "type": "number" }
+      }
+    },
+    "ChatHistory": {
+      "title": "ChatHistory",
+      "description": "AI chat messages",
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string" },
+              "content": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "AIImprovementLog": {
+      "title": "AIImprovementLog",
+      "description": "Anonymized AI interaction data for improvement",
+      "type": "object",
+      "properties": {
+        "prompt": { "type": "string" },
+        "response": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "contextSummary": { "type": "string" },
+        "actionsTaken": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["prompt", "response", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profile"
+    },
+    "/users/{uid}/documents/{docId}": {
+      "schema": "Document",
+      "description": "User documents"
+    },
+    "/users/{uid}/queue/{queueId}": {
+      "schema": "QueueItem",
+      "description": "User queue items"
+    },
+    "/users/{uid}/hours/{hourId}": {
+      "schema": "HourEntry",
+      "description": "User work logs"
+    },
+    "/users/{uid}/competencies/{compId}": {
+      "schema": "CompetencyStatus",
+      "description": "User competency statuses"
+    },
+    "/users/{uid}/customCatalog/{catId}": {
+      "schema": "CustomCompetency",
+      "description": "User custom competencies"
+    },
+    "/users/{uid}/masterplan/{phaseId}": {
+      "schema": "MasterplanPhase",
+      "description": "User masterplan phases"
+    },
+    "/users/{uid}/masterplan/phases": {
+      "schema": "MasterplanProgress",
+      "description": "User masterplan progress map"
+    },
+    "/users/{uid}/workItems/{itemId}": {
+      "schema": "WorkItem",
+      "description": "User daily work items"
+    },
+    "/users/{uid}/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "User settings documents"
+    },
+    "/users/{uid}/timer/current": {
+      "schema": "TimerState",
+      "description": "User timer state"
+    },
+    "/users/{uid}/chat/history": {
+      "schema": "ChatHistory",
+      "description": "User chat history"
+    },
+    "/ai_improvement_logs/{logId}": {
+      "schema": "AIImprovementLog",
+      "description": "Global collection for AI self-improvement data"
+    }
+  }
+}
