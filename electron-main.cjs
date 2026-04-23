@@ -106,7 +106,11 @@ app.whenReady().then(() => {
 
     // 2. Extract payload
     const { model, systemPrompt, messages } = payload;
-    const resolvedModel = model || 'qwen/qwen-plus';
+    // 3. Resolve Model (Hard-force stable model)
+    let resolvedModel = model || 'qwen/qwen-plus';
+    if (resolvedModel.toLowerCase().includes('claude')) {
+      resolvedModel = 'qwen/qwen-plus';
+    }
 
     // 4. Decrypt Key
     const apiKey = getEncryptedKey();
