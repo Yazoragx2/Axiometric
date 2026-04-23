@@ -1,7 +1,7 @@
 {
   "name": "axiometric",
   "private": true,
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Premium VA Management & Team Collaboration Framework",
   "author": "Felixv",
   "type": "module",
@@ -57,9 +57,9 @@
       "icon": "assets/icon.png"
     },
     "nsis": {
-      "oneClick": false,
+      "oneClick": true,
       "perMachine": true,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": false
     }
   },
   "devDependencies": {

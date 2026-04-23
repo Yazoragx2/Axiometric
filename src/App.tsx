@@ -363,7 +363,7 @@ function AppContent() {
                   <Logo size={24} />
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>AXIOMETRIC</span>
-                    <span style={{ fontSize: 9 }}>v3.0.3-integrated</span>
+                    <span style={{ fontSize: 9 }}>v3.0.4-integrated</span>
                   </div>
                 </div>
               </div>

@@ -89,8 +89,6 @@ app.whenReady().then(() => {
   ipcMain.handle('get-models', () => {
     return [
       { id: 'qwen/qwen-plus', name: 'Qwen Plus (Default)' },
-      { id: 'anthropic/claude-3.5-sonnet:beta', name: 'Claude 3.5 Sonnet (Latest)' },
-      { id: 'anthropic/claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet (Legacy)' },
       { id: 'google/gemini-2.0-flash-exp:free', name: 'Gemini 2.0 Flash (Free)' }
     ];
   });
@@ -108,11 +106,7 @@ app.whenReady().then(() => {
 
     // 2. Extract payload
     const { model, systemPrompt, messages } = payload;
-    // 3. Resolve Model (Fail-safe for old IDs)
-    let resolvedModel = model || 'qwen/qwen-plus';
-    if (resolvedModel.includes('claude-3.5-sonnet')) {
-      resolvedModel = 'anthropic/claude-3-5-sonnet-20240620';
-    }
+    const resolvedModel = model || 'qwen/qwen-plus';
 
     // 4. Decrypt Key
     const apiKey = getEncryptedKey();
